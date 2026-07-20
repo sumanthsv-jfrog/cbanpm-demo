@@ -1,4 +1,4 @@
-FROM psblr.jfrog.io/worksafeperm-docker-virtual/node:20-alpine
+FROM psblr.jfrog.io/sum-cba-docker-virtual2/node:20-alpine
 
 WORKDIR /app
 

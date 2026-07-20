@@ -1,0 +1,37 @@
+name: 'JFrog OIDC Setup'
+description: 'Authenticate to the JFrog Platform via OIDC and configure JFrog CLI'
+
+inputs:
+  jf-url:
+    description: 'JFrog Platform URL (without trailing slash)'
+    required: true
+  oidc-provider:
+    description: 'OIDC provider name configured in JFrog'
+    required: true
+  oidc-audience:
+    description: 'OIDC audience configured in JFrog'
+    required: true
+  verify:
+    description: 'Run "jf rt ping" to verify the connection'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup JFrog CLI
+      uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ inputs.jf-url }}
+      with:
+        oidc-provider-name: ${{ inputs.oidc-provider }}
+        oidc-audience:      ${{ inputs.oidc-audience }}
+
+    - name: Verify connection
+      if: inputs.verify == 'true'
+      shell: bash
+      run: |
+        echo "── JFrog CLI config ──────────────────────────────"
+        jf config show
+        echo "── Ping Artifactory ──────────────────────────────"
+        jf rt ping

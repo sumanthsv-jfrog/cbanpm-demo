@@ -1,4 +1,4 @@
-name: "worksafenpmdock"
+name: "cba-npmdock"
 on: workflow_dispatch
 
 # This is required as per
@@ -11,12 +11,12 @@ jobs:
   build:
      runs-on: ubuntu-latest
      env:
-      OIDC_PROVIDER: 'sumanthsvjfrog/worksafenpm-demo@github'
-      PLATFORM_REPO: 'worksafeperm-npm-virt-demo'
-      BUILD_NAME: "worksafe-npmdock-build"
+      OIDC_PROVIDER: 'sumanthsv-jfrog/cbanpm-demo@github'
+      PLATFORM_REPO: 'sum-cba-npm-virtual'
+      BUILD_NAME: "cba-npmdock-build"
       BUILD_ID: "${{github.run_number}}"
-      DOCKER_REPO: "worksafeperm-docker-virtual"
-      IMAGE_NAME: "worksafenpm-dockerbuild"
+      DOCKER_REPO: "sum-cba-docker-virtual2"
+      IMAGE_NAME: "cba-npm-dockerbuild"
       IMAGE_TAG: "${{github.run_number}}"
 
      steps:
@@ -37,42 +37,42 @@ jobs:
        - name: Set CLI Config
          run: jf npm-config --repo-resolve=$PLATFORM_REPO --repo-deploy=$PLATFORM_REPO
 
-       - name: Run Audit scan for the git workspace
-         run: jf audit --watches worksafeperm-high-sec-local --fail=false
+       #- name: Run Audit scan for the git workspace
+       #  run: jf audit --watches cba-sca-high-watch --fail=false
  
        - name: Install Dependencies
-         run: jf npm install --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}} --project=worksafeperm
+         run: jf npm install --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
          
        - name: Publish
-         run: jf npm publish --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}} --project=worksafeperm
+         run: jf npm publish --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
 
 
       # ── Docker Build ──────────────────────────────────────────────────────
        - name: Docker Build
          run: |
-           jf docker build -t psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} .  --project=worksafeperm
+           jf docker build -t psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} . 
 
       # ── Docker Scan ───────────────────────────────────────────────────────
        - name: Docker Scan
          run: |
-           jf docker scan psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --watches worksafe-sec-watch --fail=false
+           jf docker scan psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --watches cba-sca-high-watch --fail=false
 
       # ── Docker Push ───────────────────────────────────────────────────────
        - name: Docker Push
          run: |
-           jf docker push psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_ID }} --project=worksafeperm
+           jf docker push psblr.jfrog.io/${{ env.DOCKER_REPO }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --build-name=${{ env.BUILD_NAME }} --build-number=${{ env.BUILD_ID }} 
 
       # ── Publish Build Info ────────────────────────────────────────────────
        - name: Get Build Info Details
          run: |
-           jf rt bag "${{ env.BUILD_NAME }}" "${{ env.BUILD_ID }}" --project=worksafeperm
-           jf rt bce "${{ env.BUILD_NAME }}" "${{ env.BUILD_ID }}" --project=worksafeperm
+           jf rt bag "${{ env.BUILD_NAME }}" "${{ env.BUILD_ID }}" 
+           jf rt bce "${{ env.BUILD_NAME }}" "${{ env.BUILD_ID }}" 
     
        
        - name: Publish build-info to Artifactory
          run: |
-           jf rt bp ${{env.BUILD_NAME}} ${{ env.BUILD_ID }} --project=worksafeperm
+           jf rt bp ${{env.BUILD_NAME}} ${{ env.BUILD_ID }} 
           
        - name: Perform build scan
          run: |   
-           jf bs ${{env.BUILD_NAME}} ${{ env.BUILD_ID }} --project=worksafeperm
+           jf bs ${{env.BUILD_NAME}} ${{ env.BUILD_ID }}

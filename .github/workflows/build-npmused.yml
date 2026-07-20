@@ -37,7 +37,7 @@ jobs:
       # ── Build & publish npm package ─────────────────────────────
       - name: Configure npm resolve/deploy repos
         run: |
-          jf npm-config --repo-resolve=$PLATFORM_REPO--repo-deploy=$PLATFORM_REPO
+          jf npm-config --repo-resolve=$PLATFORM_REPO --repo-deploy=$PLATFORM_REPO
 
       - name: Install dependencies
         run: jf npm install --build-name=$BUILD_NAME --build-number=$BUILD_ID

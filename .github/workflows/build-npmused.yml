@@ -1,0 +1,58 @@
+name: "cba-npm-build-used"
+
+on:
+  workflow_dispatch:
+
+# id-token: write MUST be on the caller job — composite actions inherit
+# their permissions from the caller and cannot declare their own.
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      PLATFORM_REPO: "sum-cba-npm-virtual"
+      BUILD_NAME:    "cba-npm-build-used"
+      BUILD_ID:      "${{ github.run_number }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+
+      # ── JFrog authentication (composite action) ─────────────────
+      # Runs in this job's context, so `jf` remains configured
+      # for every step that follows.
+      - name: JFrog auth (OIDC)
+        uses: ./.github/actions/jfrog-auth
+        with:
+          jf-url:        https://psblr.jfrog.io
+          oidc-provider: cba-github-oidc
+          oidc-audience: cba-github-oidc
+
+      # ── Build & publish npm package ─────────────────────────────
+      - name: Configure npm resolve/deploy repos
+        run: |
+          jf npm-config --repo-resolve=$PLATFORM_REPO--repo-deploy=$PLATFORM_REPO
+
+      - name: Install dependencies
+        run: jf npm install --build-name=$BUILD_NAME --build-number=$BUILD_ID
+
+      - name: Publish
+        run: jf npm publish --build-name=$BUILD_NAME --build-number=$BUILD_ID
+
+      # ── Build info & scan ───────────────────────────────────────
+      - name: Collect build info
+        run: |
+          jf rt bce           $BUILD_NAME $BUILD_ID
+          jf rt build-add-git $BUILD_NAME $BUILD_ID
+
+      - name: Publish build-info
+        run: jf rt bp $BUILD_NAME $BUILD_ID
+
+      - name: Build scan
+        run: jf bs $BUILD_NAME $BUILD_ID

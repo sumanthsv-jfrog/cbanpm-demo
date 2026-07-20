@@ -1,4 +1,4 @@
-name: "worksafenpm"
+name: "cbanpm"
 on: workflow_dispatch
 
 # This is required as per
@@ -11,9 +11,10 @@ jobs:
   build:
      runs-on: ubuntu-latest
      env:
-      OIDC_PROVIDER: 'sumanthsvjfrog/worksafenpm-demo@github'
-      PLATFORM_REPO: 'worksafeperm-npm-virt-demo'
-      BUILD_NAME: "worksafe-npm-build"
+      OIDC_PROVIDER: 'cba-github-oidc'
+      OIDC_AUDIENCE: 'cba-github-oidc'
+      PLATFORM_REPO: 'sum-cba-npm-virtual'
+      BUILD_NAME: "cba-npm-build"
       BUILD_ID: "${{github.run_number}}"
 
      steps:
@@ -29,31 +30,31 @@ jobs:
            JF_URL: https://psblr.jfrog.io
          with:
            oidc-provider-name: ${{ env.OIDC_PROVIDER }}
+           oidc-audience: ${{ env.OIDC_AUDIENCE }}
 
 
        - name: Set CLI Config
          run: jf npm-config --repo-resolve=$PLATFORM_REPO --repo-deploy=$PLATFORM_REPO
 
        - name: Run Audit scan for the git workspace
-         run: jf audit --watches worksafe-sec-watch --fail=true
+         run: jf audit --watches cba-sca-high-watch --fail=true
  
        - name: Install Dependencies
          run: jf npm install --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
          
        - name: Publish
-         run: jf npm publish --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}} --project=worksafeperm
-
+         run: jf npm publish --build-name=${{env.BUILD_NAME}} --build-number=${{env.BUILD_ID}}
          
        - name: Collect Build info details
          run: |
           # Collect environment variables for the build
-          jf rt bce ${{env.BUILD_NAME}} ${{ github.run_number }} --project=worksafeperm
+          jf rt bce ${{env.BUILD_NAME}} ${{ github.run_number }} 
           # Collect VCS details from git and add them to the build
-          jf rt build-add-git ${{env.BUILD_NAME}} ${{ github.run_number }} --project=worksafeperm
+          jf rt build-add-git ${{env.BUILD_NAME}} ${{ github.run_number }} 
        
        - name: Publish build-info to Artifactory
          run: |
-          jf rt bp ${{env.BUILD_NAME}} ${{ github.run_number }} --project=worksafeperm
+          jf rt bp ${{env.BUILD_NAME}} ${{ github.run_number }}
           
        - name: Perform build scan
          run: |   

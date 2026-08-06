@@ -32,7 +32,7 @@ jobs:
 
 
        - name: Download from team repo
-         run: jf rt dl sum-cba-team-local/template.json
+         run: jf rt dl sum-cba-team-local/template.json --fail-no-op
 
        - name: Download from generic repo
-         run: jf rt dl sum-cba-gen-local/nn.txt
+         run: jf rt dl sum-cba-gen-local/nn.txt --fail-no-op

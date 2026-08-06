@@ -1,4 +1,4 @@
-name: "workflowtrigger"
+name: "generic_trigger"
 on: workflow_dispatch
 
 # This is required as per

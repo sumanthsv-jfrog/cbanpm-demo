@@ -32,6 +32,10 @@ jobs:
            oidc-provider-name: ${{ env.OIDC_PROVIDER }}
            oidc-audience: ${{ env.OIDC_AUDIENCE }}
 
+       - name: Debug
+         run: |
+           jf rt ping
+           exit
 
        - name: Set CLI Config
          run: jf npm-config --repo-resolve=$PLATFORM_REPO --repo-deploy=$PLATFORM_REPO

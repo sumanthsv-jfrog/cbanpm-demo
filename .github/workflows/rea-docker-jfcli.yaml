@@ -1,4 +1,4 @@
-name: Method A — jf CLI in container (OIDC)
+name: Docker Build with OIDC & JF CLI
 
 on: workflow_dispatch:
 

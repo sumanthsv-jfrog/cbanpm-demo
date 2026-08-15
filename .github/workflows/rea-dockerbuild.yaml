@@ -1,0 +1,65 @@
+name: Docker Build with OIDC & Artifactory
+
+on: workflow_dispatch
+
+permissions:
+  id-token: write      # Required to request the JWT OIDC token from GitHub
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    env:
+      JFROG_URL: https://psblr.jfrog.io
+      JFROG_REPO: rea-npm-virtual
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup JFrog CLI (exchanges GitHub OIDC for JFrog access token)
+        id: setup-jfrog-cli
+        uses: jfrog/setup-jfrog-cli@v4
+        env:
+          JF_URL: ${{ env.JFROG_URL }}
+        with:
+          oidc-provider-name: cba-github-oidc   # must match JFrog integration name
+          oidc-audience: cba-github-oidc                # must match JFrog OIDC audience
+
+      - name: Generate .npmrc from OIDC-exchanged JFrog token
+        run: |
+          set -euo pipefail
+          HOST="${JFROG_URL#https://}"
+          cat > .npmrc.secret <<EOF
+          registry=${JFROG_URL}/artifactory/api/npm/${JFROG_REPO}/
+          //${HOST}/artifactory/api/npm/${JFROG_REPO}/:_authToken=${JFROG_TOKEN}
+          //${HOST}/artifactory/api/npm/${JFROG_REPO}/:always-auth=true
+          EOF
+          # Sanity check (masks the token in logs automatically because it's marked secret)
+          echo "Generated .npmrc.secret ($(wc -l < .npmrc.secret) lines)"
+        env:
+          JFROG_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --secret id=npmrc,src=.npmrc.secret \
+            -t my-app-image:latest .
+
+      - name: Verify token did not leak into image
+        run: |
+          if docker history my-app-image:latest --no-trunc | grep -qF "$JFROG_TOKEN"; then
+            echo "FAIL: token found in image history"
+            exit 1
+          fi
+          echo "OK: token not present in image history"
+        env:
+          JFROG_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
+
+      - name: Clean up generated .npmrc
+        if: always()
+        run: rm -f .npmrc.secret

@@ -1,0 +1,21 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Only package files — NO .npmrc committed to repo
+COPY package.json ./
+
+# Mount the full .npmrc from the secret; disappears after RUN
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    npm install
+
+COPY . .
+
+# ---- Runtime stage ----
+FROM node:20-alpine
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app /app
+
+CMD ["npm", "start"]

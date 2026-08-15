@@ -47,6 +47,7 @@ jobs:
       - name: Build Docker image
         run: |
           docker build \
+            -f Dockerfile-rea \
             --secret id=npmrc,src=.npmrc.secret \
             -t my-app-image:latest .
 

@@ -44,6 +44,11 @@ jobs:
         env:
           JFROG_TOKEN: ${{ steps.setup-jfrog-cli.outputs.oidc-token }}
 
+      - name: Test reachability to JFrog
+        run: |
+          curl -v --max-time 10 https://psblr.jfrog.io/artifactory/api/system/ping || echo "UNREACHABLE"
+
+          
       - name: Build Docker image
         run: |
           docker build \
